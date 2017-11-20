@@ -21,6 +21,7 @@ import datetime
 from logbook import Logger
 import pandas as pd
 from tdx.engine import Engine
+import numpy as np
 from abc import ABCMeta, abstractmethod, abstractproperty
 import abc
 
@@ -36,7 +37,8 @@ class TdxBroker(Broker):
         self._subscribed_assets = []
         self._bars = {}
         self._bars_update_dt = None
-        self._mkt_client = Engine(auto_retry=True,best_ip=True)
+        self._bars_update_interval = pd.tslib.Timedelta('5 S')
+        self._mkt_client = Engine(auto_retry=True, best_ip=True)
         self._mkt_client.connect()
 
         super(self.__class__, self).__init__()
@@ -47,6 +49,16 @@ class TdxBroker(Broker):
             # remove str() cast to have a fun debugging journey
             # self._client.subscribe_to_market_data(str(asset.symbol))
             self._subscribed_assets.append(asset)
+            self._bars_update_dt = None
+
+    def _update_bars(self):
+        now = pd.to_datetime('now')
+        if self._bars_update_dt and (now - self._bars_update_dt < self._bars_update_interval):
+            return
+        for code in self.subscribed_assets:
+            self._bars[code] = self._mkt_client.time_and_price(code)
+
+        self._bars_update_dt = now
 
     @property
     def subscribed_assets(self):
@@ -223,7 +235,7 @@ class TdxBroker(Broker):
         rt = {}
         print(t)
         for exec_id, transaction in t.items():
-            if isinstance(transaction,list):    # handle rpc response for namedtuple object
+            if isinstance(transaction, list):  # handle rpc response for namedtuple object
                 transaction = TdxTransaction(*transaction)
             rt[exec_id] = self._tdx_transaction_to_zipline(transaction)
 
@@ -232,13 +244,74 @@ class TdxBroker(Broker):
     def cancel_order(self, order_id):
         tdx_order_id = self.orders[order_id].broker_order_id
         broker_id = self._client.get_stock_type(self.orders[order_id].symbol)
-        self._client.cancel(broker_id,tdx_order_id)
+        self._client.cancel(broker_id, tdx_order_id)
 
     def get_last_traded_dt(self, asset):
-        raise NotImplemented()
+        self.subscribe_to_market_data(asset)
+        self._update_bars()
+
+        return self._bars[str(asset.symbol)].index[-1]
 
     def get_spot_value(self, assets, field, dt, data_frequency):
-        raise NotImplemented()
+        symbol = str(assets.symbol)
+        self.subscribe_to_market_data(assets)
+        self._update_bars()
+
+        bars = self._bars[symbol]
+        last_event_time = bars.index[-1]
+
+        minute_start = (last_event_time - pd.Timedelta('1 min')) \
+            .time()
+        minute_end = last_event_time.time()
+
+        if bars.empty:
+            return pd.NaT if field == 'last_traded' else np.NaN
+        else:
+            if field == 'price':
+                return bars.price.iloc[-1]
+            elif field == 'last_traded':
+                return last_event_time or pd.NaT
+
+            minute_df = bars.between_time(minute_start, minute_end,
+                                          include_start=True, include_end=True)
+
+            if minute_df.empty:
+                return np.NaN
+            else:
+                if field == 'open':
+                    return minute_df.price.iloc[0]
+                elif field == 'close':
+                    return minute_df.price.iloc[-1]
+                elif field == 'high':
+                    return minute_df.price.max()
+                elif field == 'low':
+                    return minute_df.price.min()
+                elif field == 'volume':
+                    return minute_df.vol.sum()
 
     def get_realtime_bars(self, assets, frequency):
-        raise NotImplemented()
+        if frequency == '1m':
+            resample_freq = ' Min'
+        elif frequency == '1d':
+            resample_freq = '24 H'
+        else:
+            raise ValueError("Invalid frequency specified: %s" % frequency)
+
+        df = pd.DataFrame()
+
+        for asset in assets:
+            symbol = str(asset.symbol)
+            self.subscribe_to_market_data(asset)
+            self._update_bars()
+
+            # TODO check resample
+            trade_prices = self._bars[symbol]['price']
+            trade_sizes = self._bars[symbol]['vol']
+            ohlcv = trade_prices.resample(resample_freq).ohlc()
+            ohlcv['volume'] = trade_sizes.resample(resample_freq).sum()
+
+            ohlcv.columns = pd.MultiIndex.from_product([[asset, ],
+                                                        ohlcv.columns])
+            df = pd.concat([df, ohlcv], axis=1)
+
+        return df
