@@ -16,7 +16,7 @@ from zipline.finance.order import (
 from cn_zipline.gens.type import Transaction as TdxTransaction
 from zipline.finance.transaction import Transaction
 from zipline.api import symbol
-from .type import *
+from cn_zipline.gens.type import *
 import datetime
 from logbook import Logger
 import pandas as pd
@@ -24,15 +24,26 @@ from tdx.engine import Engine
 import numpy as np
 from abc import ABCMeta, abstractmethod, abstractproperty
 import abc
+import zerorpc
+import platform
+if platform.architecture()[0] == '32bit':
+    from cn_zipline.gens.tdx_client import TdxClient
 
 log = Logger("TDX Broker")
 
 
 class TdxBroker(Broker):
-    def __init__(self, client):
+    def __init__(self, tdx_uri,account_id=None):
 
         self._orders = {}
-        self._client = client
+        if tdx_uri.startswith('tcp'):
+            self._client = zerorpc.Client()
+            self._client.connect(tdx_uri)
+        elif platform.architecture()[0] == '32bit':
+            self._client = TdxClient(tdx_uri)
+            self._client.login()
+        else:
+            raise Exception("please use 32bit python to use local client directly, or use tcp client")
         self.currency = 'RMB'
         self._subscribed_assets = []
         self._bars = {}
@@ -112,9 +123,10 @@ class TdxBroker(Broker):
 
     @property
     def time_skew(self):
-        return 0
+        return pd.Timedelta('1 S')
 
     def order(self, asset, amount, limit_price, stop_price, style):
+        raise NotImplemented("can not test order yet")
         code = asset.symbol
 
         if amount > 0:
@@ -223,7 +235,7 @@ class TdxBroker(Broker):
         return Transaction(
             asset=symbol(transaction.asset),
             amount=transaction.amount,
-            dt=pd.to_datetime(transaction.dt),  # TODO timezone
+            dt=pd.to_datetime(transaction.dt, timezone='Asia/Shanghai').tz_convert('UTC'),  # TODO timezone
             price=transaction.price,
             order_id=transaction.order_id,
             commission=transaction.commission,

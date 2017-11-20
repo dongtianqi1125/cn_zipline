@@ -26,7 +26,7 @@ setup(
     },
 
     data_files=[
-        (distutils.sysconfig.get_python_lib() + "/cn_zipline/lib", ['cn_zipline/lib/tdx_api.pyd']),
+        (distutils.sysconfig.get_python_lib() + "/cn_zipline/libs", ['cn_zipline/libs/tdx_api.pyd']),
     ],
 
     install_requires=[

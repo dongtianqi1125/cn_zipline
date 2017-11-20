@@ -6,9 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+config.json
+
 .idea
 
 *.dll
+tmp
 
 # Distribution / packaging
 .Python

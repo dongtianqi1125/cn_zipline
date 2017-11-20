@@ -1,5 +1,4 @@
 import zerorpc
-from cn_zipline.gens.tdx_broker import TdxBroker
 
 
 def tdx_broker():
