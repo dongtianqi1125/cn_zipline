@@ -177,10 +177,10 @@ def tdx_bundle(assets,
                                ) as bar:
             minute_bar_writer.write(bar, show_progress=False)
 
-    symbol_map = pd.concat([symbol_map, pd.DataFrame(data=metas)], axis=1)
-    splits, dividends = fetch_splits_and_dividends(eg, symbol_map)
-    symbol_map.set_index('symbol', drop=False, inplace=True)
-    asset_db_writer.write(symbol_map)
+    symbols = pd.concat([symbols, pd.DataFrame(data=metas)], axis=1)
+    splits, dividends = fetch_splits_and_dividends(eg, symbols)
+    symbols.set_index('symbol', drop=False, inplace=True)
+    asset_db_writer.write(symbols)
     adjustment_writer.write(
         splits=splits,
         dividends=dividends
