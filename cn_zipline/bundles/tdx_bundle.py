@@ -4,6 +4,12 @@ from collections import OrderedDict
 import numpy as np
 import click
 import pytz
+import logging as logger
+from cn_zipline.utils.util import fillna
+from functools import partial
+from numpy import searchsorted
+
+logger.basicConfig(level=logger.INFO)
 
 OHLC_RATIO = 1000
 DAY_BARS_COLUMNS = [
@@ -39,13 +45,18 @@ def fetch_symbols(engine, assets=None):
     return symbols.reset_index()
 
 
-def fetch_single_equity(engine, symbol, freq='1d'):
+def fetch_single_equity(engine, symbol, start=None, end=None, freq='1d'):
     df = engine.get_security_bars(symbol, freq)
     df['volume'] = df['vol'].astype(np.int32) * 100  # hands * 100 == shares
 
     if freq == '1d':
         df.index = df.index.normalize()  # change datetime at 15:00 to midnight
         df['id'] = int(symbol)
+
+    if start:
+        df = df[df.index >= start]
+    if end:
+        df = df[df.index < end]
     return df.drop(['vol', 'amount', 'code'], axis=1)
 
 
@@ -92,25 +103,21 @@ def reindex_to_calendar(calendar, data, freq='1d'):
     if freq == '1d':
         all_sessions = calendar.sessions_in_range(start_session, end_session).tz_localize(None)
         df = data.reindex(all_sessions, copy=False)
-        mask = pd.isnull(df.close)
-        df.close.fillna(method='pad', inplace=True)
+        df = fillna(df)
         df.id.fillna(method='pad', inplace=True)
-        df.volume.fillna(0, inplace=True)
-        df.loc[mask, ["high", "low", "open"]] = df.close[mask]
         df.day = df.index.values.astype('datetime64[m]').astype(np.int64)
     else:
         all_sessions = calendar.minutes_for_sessions_in_range(start_session, end_session).tz_localize(None)
         data.index = data.index.tz_localize(pytz.timezone('Asia/Shanghai')).tz_convert('UTC').tz_localize(None)
         df = data.reindex(all_sessions, copy=False)
-        mask = pd.isnull(df.close)
-        df.close.fillna(method='pad', inplace=True)
-        df.loc[mask, ["high", "low", "open"]] = df.close[mask]
+        df = fillna(df)
 
     return df
 
 
 def tdx_bundle(assets,
                ingest_minute,  # whether to ingest minute data, default False
+               overwrite,
                environ,
                asset_db_writer,
                minute_bar_writer,
@@ -128,11 +135,29 @@ def tdx_bundle(assets,
     symbols = fetch_symbols(eg, assets)
     metas = []
 
+    today = pd.to_datetime('today')
+    distance = calendar.session_distance(start_session, today)
+    if not overwrite and (distance >= 100):
+        minute_start = calendar.all_sessions[searchsorted(calendar.all_sessions, today - pd.DateOffset(years=3))]
+        logger.warning(
+            "overwrite start_session for minute bars to {}(3 years),"
+            " to fetch minute data before that, please add '--overwrite True'".format(minute_start))
+
     def gen_symbols_data(symbol_map, freq='1d'):
+        func = partial(fetch_single_equity, eg)
+        start = start_session
+        end = end_session
+
+        if freq == '1m':
+            if distance >= 100:
+                func = eg.get_k_data
+                if not overwrite:
+                    start = minute_start
+
         for index, symbol in symbol_map.iteritems():
             data = reindex_to_calendar(
                 calendar,
-                fetch_single_equity(eg, symbol, freq),
+                func(symbol, start, end, freq),
                 freq=freq,
             )
             if freq == '1d':
@@ -152,10 +177,10 @@ def tdx_bundle(assets,
                                ) as bar:
             minute_bar_writer.write(bar, show_progress=False)
 
-    symbols = pd.concat([symbols, pd.DataFrame(data=metas)], axis=1)
-    splits, dividends = fetch_splits_and_dividends(eg, symbols)
-    symbols.set_index('symbol', drop=False, inplace=True)
-    asset_db_writer.write(symbols)
+    symbol_map = pd.concat([symbol_map, pd.DataFrame(data=metas)], axis=1)
+    splits, dividends = fetch_splits_and_dividends(eg, symbol_map)
+    symbol_map.set_index('symbol', drop=False, inplace=True)
+    asset_db_writer.write(symbol_map)
     adjustment_writer.write(
         splits=splits,
         dividends=dividends
