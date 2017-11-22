@@ -67,7 +67,7 @@ class TdxBroker(Broker):
         if self._bars_update_dt and (now - self._bars_update_dt < self._bars_update_interval):
             return
         for code in self.subscribed_assets:
-            self._bars[code] = self._mkt_client.time_and_price(code)
+            self._bars[code.symbol] = self._mkt_client.time_and_price(code.symbol)
 
         self._bars_update_dt = now
 

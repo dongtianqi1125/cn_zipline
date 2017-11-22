@@ -5,6 +5,7 @@ import os
 from zipline.data.bundles import register
 from zipline.data import bundles as bundles_module
 from functools import partial
+from cn_zipline.utils.register import register_tdx
 
 
 def target_ingest(assets,ingest_minute=False):
@@ -14,13 +15,13 @@ def target_ingest(assets,ingest_minute=False):
         if not os.path.exists(assets):
             raise FileNotFoundError
         df = pd.read_csv(assets, names=['symbol', 'name'], dtype=str,encoding='utf8')
-        register('tdx', partial(tdx_bundle, df[:1],ingest_minute), 'SHSZ')
+        register_tdx(df[:1],ingest_minute)
     else:
         df = pd.DataFrame({
             'symbol':['000001'],
             'name':['平安银行']
         })
-        register('tdx', partial(tdx_bundle, df,ingest_minute), 'SHSZ')
+        register_tdx(df,ingest_minute)
 
     bundles_module.ingest('tdx',
                           os.environ,

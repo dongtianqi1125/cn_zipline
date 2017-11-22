@@ -2,6 +2,7 @@
 
 
 import os
+import pandas as pd
 from decimal import Decimal, ROUND_HALF_UP
 
 # JSON配置文件路径
@@ -25,6 +26,7 @@ def getJsonPath(name, moduleFile):
     jsonPathDict[name] = moduleJsonPath
     return moduleJsonPath
 
+
 ### return 1 if sh, 0 if sz
 def get_stock_type(stock):
     one = stock[0]
@@ -39,6 +41,12 @@ def get_stock_type(stock):
 
 
 def precise_round(num):
-    return float(Decimal(str(num)).quantize(Decimal('0.01'),rounding=ROUND_HALF_UP))
+    return float(Decimal(str(num)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
 
 
+def fillna(df):
+    mask = pd.isnull(df.close)
+    df.close.fillna(method='pad', inplace=True)
+    df.volume.fillna(0, inplace=True)
+    df.loc[mask, ["high", "low", "open"]] = df.close[mask]
+    return df

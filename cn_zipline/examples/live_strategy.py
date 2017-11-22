@@ -9,7 +9,7 @@ def initialize(context):
 
 def handle_data(context, data):
     can_trade = data.can_trade(context.smb)
-    hist = data.history(context.smb, bar_count=20, frequency='1m', field='open')
+    hist = data.history(context.smb, bar_count=20, frequency='1m', fields='open')
     print(context.current_dt, hist)
 
 
