@@ -317,7 +317,6 @@ class TdxBroker(Broker):
             self.subscribe_to_market_data(asset)
             self._update_bars()
 
-            # TODO check resample
             trade_prices = self._bars[symbol]['price']
             trade_sizes = self._bars[symbol]['vol']
             ohlcv = trade_prices.resample(resample_freq,
