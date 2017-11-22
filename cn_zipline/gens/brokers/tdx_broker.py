@@ -26,6 +26,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 import abc
 import zerorpc
 import platform
+
 if platform.architecture()[0] == '32bit':
     from cn_zipline.gens.tdx_client import TdxClient
 
@@ -33,7 +34,7 @@ log = Logger("TDX Broker")
 
 
 class TdxBroker(Broker):
-    def __init__(self, tdx_uri,account_id=None):
+    def __init__(self, tdx_uri, account_id=None):
 
         self._orders = {}
         if tdx_uri.startswith('tcp'):
@@ -319,8 +320,12 @@ class TdxBroker(Broker):
             # TODO check resample
             trade_prices = self._bars[symbol]['price']
             trade_sizes = self._bars[symbol]['vol']
-            ohlcv = trade_prices.resample(resample_freq).ohlc()
-            ohlcv['volume'] = trade_sizes.resample(resample_freq).sum()
+            ohlcv = trade_prices.resample(resample_freq,
+                                          label='right',
+                                          closed='left').ohlc()
+            ohlcv['volume'] = trade_sizes.resample(resample_freq,
+                                                   label='right',
+                                                   closed='left').sum()
 
             ohlcv.columns = pd.MultiIndex.from_product([[asset, ],
                                                         ohlcv.columns])
