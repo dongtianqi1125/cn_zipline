@@ -48,5 +48,5 @@ def fillna(df):
     mask = pd.isnull(df.close)
     df.close.fillna(method='pad', inplace=True)
     df.volume.fillna(0, inplace=True)
-    df.loc[mask, ["high", "low", "open"]] = df.close[mask]
+    df.loc[mask, ["high", "low", "open"]] = df.loc[mask, "close"]
     return df
