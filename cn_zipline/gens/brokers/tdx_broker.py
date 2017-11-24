@@ -14,6 +14,7 @@ from zipline.finance.order import (
     ORDER_STATUS as ZP_ORDER_STATUS
 )
 from cn_zipline.gens.type import Transaction as TdxTransaction
+from cn_zipline.gens.type import Order as TdxOrder
 from zipline.finance.transaction import Transaction
 from zipline.api import symbol
 from cn_zipline.gens.type import *
@@ -174,6 +175,9 @@ class TdxBroker(Broker):
 
         if not order:
             order = self._client.orders()[order_id]
+
+        if isinstance(order, list):  # handle rpc response for namedtuple object
+            order = TdxOrder(*order)
         self._orders[zp_order_id] = self.tdx_order_to_zipline_order(order)
         return self._orders[zp_order_id]
 
@@ -204,7 +208,9 @@ class TdxBroker(Broker):
         )
 
     def tdx_order_to_zipline_order(self, order):
-        if order.filled == 0:
+        if order.status == '已撤':
+            zp_status = ZP_ORDER_STATUS.CANCELLED
+        elif order.filled == 0:
             zp_status = ZP_ORDER_STATUS.OPEN
         else:
             zp_status = ZP_ORDER_STATUS.FILLED
@@ -219,15 +225,17 @@ class TdxBroker(Broker):
             stop=None,
             limit=order.price,  # TODO 市价单和限价单
             id=zp_order_id,
-            broker_order_id=order.order_id
         )
-
+        od.broker_order_id=order.order_id
         od.status = zp_status
+
         return od
 
     def _update_orders(self):
         ods = self._client.orders()
         for tdx_order_id, tdx_order in iteritems(ods):
+            if isinstance(tdx_order, list):  # handle rpc response for namedtuple object
+                tdx_order = TdxOrder(*tdx_order)
             zp_order_id = self._tdx_to_zp_order_id(tdx_order_id)
             self._orders[zp_order_id] = self.tdx_order_to_zipline_order(tdx_order)
 
@@ -246,7 +254,6 @@ class TdxBroker(Broker):
     def transactions(self):
         t = self._client.transactions()
         rt = {}
-        print(t)
         for exec_id, transaction in t.items():
             if isinstance(transaction, list):  # handle rpc response for namedtuple object
                 transaction = TdxTransaction(*transaction)

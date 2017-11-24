@@ -8,6 +8,8 @@ import logging as logger
 from cn_zipline.utils.util import fillna
 from functools import partial
 from numpy import searchsorted
+import zipline.data.bundles.core as bundles
+from zipline.utils.calendars import get_calendar
 
 logger.basicConfig(level=logger.INFO)
 
@@ -188,6 +190,20 @@ def tdx_bundle(assets,
 
     eg.exit()
 
+
+def register_tdx(assets=None, minute=False, start=None, overwrite=False, end=None):
+    try:
+        bundles.unregister('tdx')
+    except bundles.UnknownBundle:
+        pass
+    calendar = get_calendar('SHSZ')
+    if start:
+        if not calendar.is_session(start):
+            start = calendar.all_sessions[searchsorted(calendar.all_sessions, start)]
+    bundles.register('tdx', partial(tdx_bundle, assets, minute, overwrite), 'SHSZ', start, end)
+
+
+bundles.register('tdx', partial(tdx_bundle, None, False, False))
 
 if __name__ == '__main__':
     eg = Engine(auto_retry=True, multithread=True, thread_num=8)

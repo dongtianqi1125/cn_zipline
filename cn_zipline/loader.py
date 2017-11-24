@@ -25,7 +25,7 @@ from zipline.utils.paths import (
 )
 import pandas as pd
 
-from cn_stock_holidays.zipline.default_calendar import shsz_calendar
+from cn_stock_holidays.zipline.exchange_calendar_shsz import SHSZExchangeCalendar
 
 from cn_treasury_curve.data import get_zipline_format
 import requests
@@ -124,6 +124,8 @@ def load_market_data(trading_day=None, trading_days=None, bm_symbol='000001', tr
     '1month', '3month', '6month',
     '1year','2year','3year','5year','7year','10year','20year','30year'
     """
+
+    shsz_calendar = SHSZExchangeCalendar()
     if trading_day is None:
         trading_day = shsz_calendar.trading_day
     if trading_days is None:

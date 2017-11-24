@@ -15,7 +15,6 @@ def handle_data(context, data):
 
 if __name__ == '__main__':
     from zipline.utils.cli import Date
-    from cn_stock_holidays.zipline.default_calendar import shsz_calendar
     from cn_zipline.utils.run_algo import run_algorithm
     from cn_zipline.gens.brokers.tdx_broker import TdxBroker
     import pandas as pd
@@ -33,5 +32,5 @@ if __name__ == '__main__':
     end = Date(tz='utc', as_timestamp=True).parser('2017-11-01')
 
     run_algorithm(start, end, initialize, 10e6, handle_data=handle_data, bundle='tdx',
-                  trading_calendar=shsz_calendar, data_frequency="daily", output='out.pickle',
+                  trading_calendar='SHSZ', data_frequency="minute", output='out.pickle',
                   broker=broker, state_filename=state_filename, realtime_bar_target=realtime_bar_target)

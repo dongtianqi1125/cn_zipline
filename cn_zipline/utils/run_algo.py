@@ -125,6 +125,11 @@ def _run(handle_data,
         else:
             click.echo(algotext)
 
+    if not trading_calendar:
+        trading_calendar = get_calendar('SHSZ')
+    elif isinstance(trading_calendar,str):
+        trading_calendar = get_calendar(trading_calendar)
+
     if bundle is not None:
         bundle_data = load(
             bundle,
@@ -171,9 +176,6 @@ def _run(handle_data,
     else:
         env = TradingEnvironment(environ=environ, load=load_market_data, bm_symbol='000300', )
         choose_loader = None
-
-    if not trading_calendar:
-        trading_calendar = get_calendar('SHSZ')
 
     emission_rate = 'daily'  # TODO why daily default
     if broker:

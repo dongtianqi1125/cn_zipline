@@ -9,8 +9,8 @@ logging.basicConfig()
 def orders():
     client = TdxClient('config.json')
     client.login()
-    str(client.transactions())
-    str(client.orders())
+    print(client.transactions())
+    print(client.orders())
 
 
 def rpc_server():
