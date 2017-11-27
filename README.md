@@ -38,20 +38,6 @@ python2.7或者python3.5，尽量使用较新版本的Anaconda。旧版本的在
 
 **注意**：Anaconda官网提供的链接，3.x版本默认下载python3.6。
 
-如何用anaconda安装其它版本的python:
-
-新建环境：
-
-`conda create --name=py35 python=3.5`
-
-激活环境：
-
-`activate py35`
-
-取消环境:
-
-`deactivate py35`
-
 分支
 ----------
 #### `master`:
