@@ -9,7 +9,12 @@
 [![Build Status](https://travis-ci.org/JaysonAlbert/cn_zipline.svg?branch=master)](https://travis-ci.org/JaysonAlbert/cn_zipline)
 [![Build status](https://ci.appveyor.com/api/projects/status/b0pf9nndpj65x0nj/branch/master?svg=true)](https://ci.appveyor.com/project/JaysonAlbert/cn-zipline/branch/master)
 
-**注意：此项目将逐渐迁移到更简便易用的[zipline](https://github.com/JaysonAlbert/zipline)**
+
+**注意：**
+
+**`cn_zipline`项目将逐渐迁移到更简便易用的[zipline](https://github.com/JaysonAlbert/zipline)。cn_zipline为Quantopian zipline的扩展，没办法直接修改zipline的代码,需要通过一些黑科技才能满足一些需求，所以通过fork zipline，直接在上面修改，不仅便于同步原版zipline的持续更新，易用性也得到了改善，所以推荐使用新项目zipline，最终cn_zipline将慢慢停止维护。**
+
+----------------
 
 基于tdx的zipline bundle.
 
