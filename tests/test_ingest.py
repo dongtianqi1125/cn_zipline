@@ -5,7 +5,7 @@ import os
 from zipline.data.bundles import register
 from zipline.data import bundles as bundles_module
 from functools import partial
-from cn_zipline.utils.register import register_tdx
+from cn_zipline.bundles.tdx_bundle import register_tdx
 
 
 def target_ingest(assets,ingest_minute=False):
@@ -33,3 +33,6 @@ def target_ingest(assets,ingest_minute=False):
 def test_target_ingest():
     yield target_ingest,'tests/ETF.csv',True
     yield target_ingest,None,False
+
+
+target_ingest(None,True)

@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-perf = pd.read_pickle('cn_zipline/examples/out.pickle') # read in perf DataFrame
+perf = pd.read_pickle('out.pickle') # read in perf DataFrame
 
 ax1 = plt.subplot(211)
 perf.portfolio_value.plot(ax=ax1)

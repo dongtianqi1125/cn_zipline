@@ -12,7 +12,7 @@
 
 **注意：**
 
-**`cn_zipline`项目将逐渐迁移到更简便易用的[zipline](https://github.com/JaysonAlbert/zipline)。cn_zipline为Quantopian zipline的扩展，没办法直接修改zipline的代码,需要通过一些黑科技才能满足一些需求，所以通过fork zipline，直接在上面修改，不仅便于同步原版zipline的持续更新，易用性也得到了改善，所以推荐使用新项目zipline，最终cn_zipline将慢慢停止维护。**
+**`cn_zipline`项目已经迁移到更简洁易用的[zipline](https://github.com/JaysonAlbert/zipline)。此项目进度已经落后于zipline，并且将不再维护，因此带来的不便，敬请谅解。**
 
 ----------------
 
@@ -57,6 +57,11 @@ python2.7或者python3.5，尽量使用较新版本的Anaconda。旧版本的在
 **注意**：在`windows`上，如果`zipline`安装失败，先用`conda install -c Quantopian zipline`安装`zipline`,然后再安装`cn_zipline`
     
 将`cn_zipline/extension.py`拷贝至zipline的数据目录,默认为`~/.zipline`
+
+
+实盘
+----------
+实盘部分代码正在开发中，请参考[issue](https://github.com/JaysonAlbert/cn_zipline/issues/2)
 
  
 使用

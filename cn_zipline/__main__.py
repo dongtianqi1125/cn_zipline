@@ -5,7 +5,7 @@ from zipline.utils.cli import Date, Timestamp
 import pandas as pd
 import os
 import cn_stock_holidays.zipline.default_calendar
-from cn_zipline.utils.register import register_tdx
+from cn_zipline.bundles.tdx_bundle import register_tdx
 
 
 @click.group()
