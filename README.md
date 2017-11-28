@@ -9,6 +9,13 @@
 [![Build Status](https://travis-ci.org/JaysonAlbert/cn_zipline.svg?branch=master)](https://travis-ci.org/JaysonAlbert/cn_zipline)
 [![Build status](https://ci.appveyor.com/api/projects/status/b0pf9nndpj65x0nj/branch/master?svg=true)](https://ci.appveyor.com/project/JaysonAlbert/cn-zipline/branch/master)
 
+
+**注意：**
+
+**`cn_zipline`项目将逐渐迁移到更简便易用的[zipline](https://github.com/JaysonAlbert/zipline)。cn_zipline为Quantopian zipline的扩展，没办法直接修改zipline的代码,需要通过一些黑科技才能满足一些需求，所以通过fork zipline，直接在上面修改，不仅便于同步原版zipline的持续更新，易用性也得到了改善，所以推荐使用新项目zipline，最终cn_zipline将慢慢停止维护。**
+
+----------------
+
 基于tdx的zipline bundle.
 
 [zipline](http://zipline.io/)是美国[Quantopian](https://quantopian.com/) 公司开源的量化交易回测引擎，它使用`Python`语言开发，
@@ -31,19 +38,17 @@ python2.7或者python3.5，尽量使用较新版本的Anaconda。旧版本的在
 
 **注意**：Anaconda官网提供的链接，3.x版本默认下载python3.6。
 
-如何用anaconda安装其它版本的python:
+分支
+----------
+#### `master`:
+包含了基本的回测功能，下单撮合使用下一bar的close价（ricequant可选当前bar的close和下一bar的open）
 
-新建环境：
+#### `open_order`:
+下单撮合使用下一bar的open价
 
-`conda create --name=py35 python=3.5`
+#### `zipline-live`:
+支持实盘功能，正在开发中，详情见[实盘issue](https://github.com/JaysonAlbert/cn_zipline/issues/2)
 
-激活环境：
-
-`activate py35`
-
-取消环境:
-
-`deactivate py35`
 
 安装
 ----------

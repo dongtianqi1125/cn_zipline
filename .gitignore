@@ -9,10 +9,9 @@ __pycache__/
 config.json
 
 .idea
-
 *.dll
+*.json
 tmp
-
 # Distribution / packaging
 .Python
 build/
