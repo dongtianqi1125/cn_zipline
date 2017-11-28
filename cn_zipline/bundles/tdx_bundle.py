@@ -137,13 +137,15 @@ def tdx_bundle(assets,
     symbols = fetch_symbols(eg, assets)
     metas = []
 
-    today = pd.to_datetime('today')
+    today = pd.to_datetime('today',utc=True)
     distance = calendar.session_distance(start_session, today)
-    if not overwrite and (distance >= 100):
+    if ingest_minute and not overwrite and (start_session < today - pd.DateOffset(years=3)):
         minute_start = calendar.all_sessions[searchsorted(calendar.all_sessions, today - pd.DateOffset(years=3))]
         logger.warning(
             "overwrite start_session for minute bars to {}(3 years),"
             " to fetch minute data before that, please add '--overwrite True'".format(minute_start))
+    else:
+        minute_start = start_session
 
     def gen_symbols_data(symbol_map, freq='1d'):
         func = partial(fetch_single_equity, eg)
@@ -153,8 +155,7 @@ def tdx_bundle(assets,
         if freq == '1m':
             if distance >= 100:
                 func = eg.get_k_data
-                if not overwrite:
-                    start = minute_start
+                start = minute_start
 
         for index, symbol in symbol_map.iteritems():
             data = reindex_to_calendar(
@@ -200,10 +201,10 @@ def register_tdx(assets=None, minute=False, start=None, overwrite=False, end=Non
     if start:
         if not calendar.is_session(start):
             start = calendar.all_sessions[searchsorted(calendar.all_sessions, start)]
-    bundles.register('tdx', partial(tdx_bundle, assets, minute, overwrite), 'SHSZ', start, end)
+    bundles.register('tdx', partial(tdx_bundle, assets, minute, overwrite), 'SHSZ', start, end, minutes_per_day=240)
 
 
-bundles.register('tdx', partial(tdx_bundle, None, False, False))
+bundles.register('tdx', partial(tdx_bundle, None, False, False),minutes_per_day=240)
 
 if __name__ == '__main__':
     eg = Engine(auto_retry=True, multithread=True, thread_num=8)
