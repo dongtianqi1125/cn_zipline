@@ -6,6 +6,9 @@ import pandas as pd
 import os
 import cn_stock_holidays.zipline.default_calendar
 from cn_zipline.bundles.tdx_bundle import register_tdx
+import logbook
+
+logger = logbook.Logger('main')
 
 
 @click.group()
@@ -65,6 +68,7 @@ def main():
     help='Print progress information to the terminal.'
 )
 def ingest(bundle, assets, minute, start,overwrite, assets_version, show_progress):
+    logger.warning("this project is no longer maintained, please go to https://github.com/JaysonAlbert/zipline for the new project.")
     if bundle == 'tdx':
         if assets:
             if not os.path.exists(assets):
